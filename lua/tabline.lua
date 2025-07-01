@@ -39,8 +39,22 @@ local function tabline(options)
         -- icon
         local icon = ''
         if options.show_icon and M.has_devicons then
-            local ext = fn.fnamemodify(bufname, ':e')
-            icon = M.devicons.get_icon(bufname, ext, { default = true }) .. ' '
+            if bufname:find('oil://') then
+                local path = bufname:gsub('oil://', '')
+                if not vim.fs.dir(path)() then
+                    icon = ''
+                else
+                    icon = ''
+                end
+            elseif bufname:find('fugitive://') then
+                icon = ''
+            elseif bufname:find('term://') then
+                icon = ''
+            else
+                local ext = fn.fnamemodify(bufname, ':e')
+                icon = M.devicons.get_icon(bufname, ext, { default = true })
+            end
+            icon = icon .. ' '
         end
         -- buf name
         s = s .. options.brackets[1]
@@ -49,7 +63,15 @@ local function tabline(options)
             if type(options.fnamemodify) == 'function' then
                 s = s .. icon .. options.fnamemodify(bufname)
             else
-                s = s .. icon .. fn.fnamemodify(bufname, options.fnamemodify)
+                if string.find(bufname, 'oil://') then
+                    s = s .. icon .. fn.fnamemodify(bufname, ':h:t') .. '/'
+                elseif string.find(bufname, 'fugitive://') then
+                    s = s .. icon .. 'git'
+                else
+                    s = s
+                        .. icon
+                        .. fn.fnamemodify(bufname, options.fnamemodify)
+                end
             end
         else
             s = s .. options.no_name
